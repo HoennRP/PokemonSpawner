@@ -1,6 +1,6 @@
 import './App.css';
 
-import { MainClient, Pokemon, TypePokemon } from 'pokenode-ts';
+import { MainClient, TypePokemon } from 'pokenode-ts';
 import { useCallback, useState } from 'react';
 
 const api = new MainClient();
