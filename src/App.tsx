@@ -161,6 +161,7 @@ const filterByMiscCriteria = async (toFilterPokemon: TypePokemon[]) => {
   const species = await Promise.all(
     pokemons.map((p) => getSpeciesByName(p.pokemon.name))
   );
+  console.log("Species data: ", species);
   const excluded = species.filter(
     (s) => s.is_legendary || s.is_mythical || s.hatch_counter > 48
   ).map((s) => s.name);
@@ -223,10 +224,10 @@ const getSpeciesByName = async (name: string) => {
 
 // Add your BBCode Template here
 const generateBBCode = (pokemonName: string, spriteUrl: string | null) => {
-  return `[div][attr="class","pokegachabox"]
+  return `\n[div][attr="class","pokegachabox"]
   [img src="${spriteUrl}" alt="${pokemonName}"]
   [div][attr="class","pokegachaname"]${pokemonName}[/div]
-  [/div]`;
+  [/div]\n`;
 }
 
 const generatePokemonSet = (pokemon: { name: string, sprite: string | null }[], isPrem: boolean) => {
