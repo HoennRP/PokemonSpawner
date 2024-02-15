@@ -161,12 +161,15 @@ const filterByMiscCriteria = async (toFilterPokemon: TypePokemon[]) => {
   const species = await Promise.all(
     pokemons.map((p) => getSpeciesByName(p.pokemon.name))
   );
-  console.log("Species data: ", species);
+  const speciesNames = species.reduce((acc, s) => {
+    acc[s.name] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
   const excluded = species.filter(
     (s) => s.is_legendary || s.is_mythical || s.hatch_counter > 48
   ).map((s) => s.name);
 
-  return pokemons.filter((p) => !excluded.includes(p.pokemon.name));
+  return pokemons.filter((p) => !excluded.includes(p.pokemon.name) && speciesNames[p.pokemon.name]);
 }
 
 const getAllElligiblePokemonForType = async (type: string, isPrem: boolean) => {
