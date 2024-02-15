@@ -87,12 +87,13 @@ function App() {
       </div>
       <div>
         <label htmlFor="types">Type:</label>
-        <input
-          type="text"
-          id="type"
+        <select
+          id="types"
           value={type}
-          onChange={(e) => setType(e.target.value)}
-        />
+          onChange={(e) => setType(e.target.value)}>
+          <option value="">none</option>
+          {ALL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
       </div>
 
       <div>
@@ -109,6 +110,7 @@ function App() {
           readOnly
           rows={10}
           cols={50}
+          style={{width: '50%', height: '50%'}}
         />
       </div>
     </>
