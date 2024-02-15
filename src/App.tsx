@@ -1,6 +1,6 @@
 import './App.css';
 
-import { MainClient, TypePokemon } from 'pokenode-ts';
+import { MainClient, Pokemon, TypePokemon } from 'pokenode-ts';
 import { useCallback, useState } from 'react';
 
 const api = new MainClient();
@@ -195,6 +195,27 @@ const selectRandomPokemonFromList = (pokemons: TypePokemon[], n: number) => {
   return selected;
 }
 
+const filterRegularPokemon = async (pokemons: Pokemon[]) => {
+  // Make sure to remove alternate forms from the results as well
+  const species = await Promise.all(
+    pokemons.map((p) => getSpeciesByName(p.name))
+  );
+  const speciesNames = species.reduce((acc, s) => {
+    acc[s.name] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
+  const excluded = species.filter(
+    (s) => s.is_legendary || s.is_mythical || s.hatch_counter > 48
+  ).map((s) => s.name);
+
+  return pokemons.filter((p) => !excluded.includes(p.name) && speciesNames[p.name]);
+}
+
+const isPokemonValid = async (pokemon: Pokemon) => {
+  const species = await getSpeciesByName(pokemon.name);
+  return !species.is_legendary && !species.is_mythical && species.hatch_counter <= 48;
+}
+
 const selectRandomPokemonFromAll = async (n: number) => {
   // Generate n unique random numbers between 1 and LAST_POKEDEX_NUM
   if (n > LAST_POKEDEX_NUM) {
@@ -202,7 +223,11 @@ const selectRandomPokemonFromAll = async (n: number) => {
   }
   const pokedexIds = new Set<number>();
   while (pokedexIds.size < n) {
-    pokedexIds.add(Math.floor(Math.random() * LAST_POKEDEX_NUM) + 1);
+    const id = Math.floor(Math.random() * LAST_POKEDEX_NUM) + 1;
+    const currPokemon = await api.pokemon.getPokemonById(id);
+    if (await isPokemonValid(currPokemon)) {
+      pokedexIds.add(id);
+    }
   }
   const pokemons = await Promise.all(
     Array.from(pokedexIds).map((id) => api.pokemon.getPokemonById(id))
