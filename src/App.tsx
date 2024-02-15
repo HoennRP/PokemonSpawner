@@ -32,7 +32,7 @@ const LAST_POKEDEX_NUM = 1025;
 const NUM_POKEMON_PER_SET = 3;
 
 const header = `[nospaces]`;
-const footer = `[attr="class","pokegachatag"]@tag[/div]`;
+const footer = `[div align="center"][attr="class","pokegachatag"]@tag[/div][/div]`;
 
 function App() {
   const [bbCode, setBBCode] = useState("");
