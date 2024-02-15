@@ -195,23 +195,38 @@ const selectRandomPokemonFromList = (pokemons: TypePokemon[], n: number) => {
   return selected;
 }
 
-const isPokemonValid = async (pokemon: Pokemon) => {
-  const species = await getSpeciesByName(pokemon.name);
-  return !species.is_legendary && !species.is_mythical && species.hatch_counter <= 48;
+const filterRegularPokemon = async (pokemons: Pokemon[]) => {
+  // Make sure to remove alternate forms from the results as well
+  const species = await Promise.all(
+    pokemons.map((p) => getSpeciesByName(p.name))
+  );
+  const speciesNames = species.reduce((acc, s) => {
+    acc[s.name] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
+  const excluded = species.filter(
+    (s) => s.is_legendary || s.is_mythical || s.hatch_counter > 48
+  ).map((s) => s.name);
+
+  return pokemons.filter((p) => !excluded.includes(p.name) && speciesNames[p.name]);
 }
 
 const selectRandomPokemonFromAll = async (n: number) => {
+
+  const allSpecies = await Promise.all(
+    [...Array(LAST_POKEDEX_NUM).keys()].map((i) => api.pokemon.getPokemonSpeciesById(i + 1))
+  );
+  const filteredSpecies = await allSpecies.filter((s) => !s.is_legendary && !s.is_mythical && s.hatch_counter <= 48);
   // Generate n unique random numbers between 1 and LAST_POKEDEX_NUM
   if (n > LAST_POKEDEX_NUM) {
-    throw new Error(`Not enough pokemon in the pokedex. Only ${LAST_POKEDEX_NUM} available`);
+    throw new Error(`Not enough pokemon in the pokedex. Only ${filteredSpecies.length} available`);
   }
   const pokedexIds = new Set<number>();
   while (pokedexIds.size < n) {
-    const id = Math.floor(Math.random() * LAST_POKEDEX_NUM) + 1;
-    const currPokemon = await api.pokemon.getPokemonById(id);
-    if (await isPokemonValid(currPokemon)) {
-      pokedexIds.add(id);
-    }
+    const index = Math.floor(Math.random() * filteredSpecies.length) + 1;
+    const id = filteredSpecies[index].id;
+    filteredSpecies.splice(index, 1);
+    pokedexIds.add(id);
   }
   const pokemons = await Promise.all(
     Array.from(pokedexIds).map((id) => api.pokemon.getPokemonById(id))
