@@ -34,7 +34,6 @@ function App() {
 
   const [numPokemons, setNumPokemons] = useState(1);
   const [type, setType] = useState("");
-  const [tag, setTag] = useState("Your tag");
   const [error, setError] = useState("");
 
   const handleGenerate = useCallback(async () => {
@@ -46,12 +45,12 @@ function App() {
       if (trimmedType === "") {
         const selected = await selectRandomPokemonFromAll(numPokemons);
         const pokemonInfo = await Promise.all(selected.map(p => getInfoForPokemon(p.name)));
-        setBBCode(pokemonInfo.map((p) => generateBBCode(p.name, p.sprite, tag)).join("\n"));
+        setBBCode(pokemonInfo.map((p) => generateBBCode(p.name, p.sprite)).join("\n"));
       } else if (ALL_TYPES.includes(trimmedType)) {
         const pokemonOfType = await getAllElligiblePokemonForType(trimmedType, true);
         const selected = selectRandomPokemonFromList(pokemonOfType, numPokemons);
         const pokemonInfo = await Promise.all(selected.map(p => getInfoForPokemon(p.pokemon.name)));
-        setBBCode(pokemonInfo.map((p) => generateBBCode(p.name, p.sprite, tag)).join("\n"));
+        setBBCode(pokemonInfo.map((p) => generateBBCode(p.name, p.sprite)).join("\n"));
       } else {
         setError(`Invalid type: "${type}", Enter a single type or leave the field empty.`);
       }
@@ -60,7 +59,7 @@ function App() {
         setError(e.message);
       }
     }
-  }, [numPokemons, tag, type]);
+  }, [numPokemons, type]);
 
   return (
     <>
@@ -73,15 +72,6 @@ function App() {
           id="numPokemons"
           value={numPokemons}
           onChange={(e) => setNumPokemons(Number(e.target.value))}
-        />
-      </div>
-      <div>
-        <label htmlFor="tag">Tag:</label>
-        <input
-          type="text"
-          id="tag"
-          value={tag}
-          onChange={(e) => setTag(e.target.value)}
         />
       </div>
       <div>
@@ -221,8 +211,8 @@ const getSpeciesByName = async (name: string) => {
 }
 
 // Add your BBCode Template here
-const generateBBCode = (pokemonName: string, spriteUrl: string | null, tag: string) => {
-  return `Pokemon: ${pokemonName}\nTag: ${tag}\n[img]${spriteUrl}[/img]\n`;
+const generateBBCode = (pokemonName: string, spriteUrl: string | null) => {
+  return `Pokemon: ${pokemonName}\n[img]${spriteUrl}[/img]\n`;
 }
 
 export default App;
