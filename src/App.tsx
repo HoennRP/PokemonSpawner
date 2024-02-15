@@ -110,7 +110,7 @@ function App() {
           readOnly
           rows={10}
           cols={50}
-          style={{width: '50%', height: '50%'}}
+          style={{width: '800px', height: '400px'}}
         />
       </div>
     </>
