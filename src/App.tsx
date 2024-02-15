@@ -29,10 +29,15 @@ const language = "en";
 
 const LAST_POKEDEX_NUM = 1025;
 
+const NUM_POKEMON_PER_SET = 3;
+
+const header = `[nospaces]`;
+const footer = `[attr="class","pokegachatag"]@tag[/div]`;
+
 function App() {
   const [bbCode, setBBCode] = useState("");
 
-  const [numPokemons, setNumPokemons] = useState(1);
+  const [numSets, setNumSets] = useState(1);
   const [type, setType] = useState("");
   const [error, setError] = useState("");
 
@@ -41,37 +46,43 @@ function App() {
     setBBCode("Generating...");
 
     try {
+      let bbCodeText = `${header}\n`;
       const trimmedType = type.toLocaleLowerCase().trim();
       if (trimmedType === "") {
-        const selected = await selectRandomPokemonFromAll(numPokemons);
-        const pokemonInfo = await Promise.all(selected.map(p => getInfoForPokemon(p.name)));
-        setBBCode(pokemonInfo.map((p) => generateBBCode(p.name, p.sprite)).join("\n"));
+        for (let i = 0; i < numSets; i++) {
+          const selected = await selectRandomPokemonFromAll(NUM_POKEMON_PER_SET);
+          const pokemonInfo = await Promise.all(selected.map(p => getInfoForPokemon(p.name)));
+          bbCodeText += generatePokemonSet(pokemonInfo, false);
+        }
       } else if (ALL_TYPES.includes(trimmedType)) {
-        const pokemonOfType = await getAllElligiblePokemonForType(trimmedType, true);
-        const selected = selectRandomPokemonFromList(pokemonOfType, numPokemons);
-        const pokemonInfo = await Promise.all(selected.map(p => getInfoForPokemon(p.pokemon.name)));
-        setBBCode(pokemonInfo.map((p) => generateBBCode(p.name, p.sprite)).join("\n"));
+        for (let i = 0; i < numSets; i++) {
+          const pokemonOfType = await getAllElligiblePokemonForType(trimmedType, true);
+          const selected = selectRandomPokemonFromList(pokemonOfType, NUM_POKEMON_PER_SET);
+          const pokemonInfo = await Promise.all(selected.map(p => getInfoForPokemon(p.pokemon.name)));
+          bbCodeText += generatePokemonSet(pokemonInfo, true);
+        }
       } else {
         setError(`Invalid type: "${type}", Enter a single type or leave the field empty.`);
       }
+      setBBCode(`${bbCodeText}\n${footer}`)
     } catch (e) {
       if (e instanceof Error) {
         setError(e.message);
       }
     }
-  }, [numPokemons, type]);
+  }, [numSets, type]);
 
   return (
     <>
-      <h1>Pokemon BBCode Generator</h1>
+      <h1>Pokemon Gachapon Generator</h1>
 
       <div>
-        <label htmlFor="numPokemons">Number of Pokemon:</label>
+        <label htmlFor="numPokemons">Number of Gachapon Sets:</label>
         <input
           type="number"
           id="numPokemons"
-          value={numPokemons}
-          onChange={(e) => setNumPokemons(Number(e.target.value))}
+          value={numSets}
+          onChange={(e) => setNumSets(Number(e.target.value))}
         />
       </div>
       <div>
@@ -212,7 +223,40 @@ const getSpeciesByName = async (name: string) => {
 
 // Add your BBCode Template here
 const generateBBCode = (pokemonName: string, spriteUrl: string | null) => {
-  return `Pokemon: ${pokemonName}\n[img]${spriteUrl}[/img]\n`;
+  return `[div][attr="class","pokegachabox"]
+  [img src="${spriteUrl}" alt="${pokemonName}"]
+  [div][attr="class","pokegachaname"]${pokemonName}[/div]
+  [/div]`;
 }
 
+const generatePokemonSet = (pokemon: { name: string, sprite: string | null }[], isPrem: boolean) => {
+  return `
+      [div][attr="class","pokegacha"]
+
+      [div][attr="class","pokegachabar"]
+        [div]x[/div]
+        [div]□[/div]
+        [div]-[/div][i][attr="class","icon-ball2"][/i]${isPrem ? "PREMIUM GACHAPON" : "NORMAL GACHAPON"}
+      [/div]
+
+      [div][attr="class","pokegachasmmn"]
+                
+      ${pokemon.map((p) => generateBBCode(p.name, p.sprite)).join("\n")}
+                
+              [/div]
+      [div][attr="class","pokegachabtm"]
+        [a href="https://pokeapi.co/"]
+          [div][attr="class","pokegachabttn"]
+            [div][attr="class","pokegachabttn2"][/div][span style="top: auto;"]info[/span]
+          [/div]
+        [/a]
+        [a href="https://pokeapi.co/"]
+          [div][attr="class","pokegachabttn"]
+            [div][attr="class","pokegachabttn2"][/div][span style="top: auto;"]shop[/span]
+          [/div]
+        [/a]
+      [/div]
+    [/div]
+    [div]`;
+}
 export default App;
