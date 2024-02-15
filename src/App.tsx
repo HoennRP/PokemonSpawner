@@ -195,22 +195,6 @@ const selectRandomPokemonFromList = (pokemons: TypePokemon[], n: number) => {
   return selected;
 }
 
-const filterRegularPokemon = async (pokemons: Pokemon[]) => {
-  // Make sure to remove alternate forms from the results as well
-  const species = await Promise.all(
-    pokemons.map((p) => getSpeciesByName(p.name))
-  );
-  const speciesNames = species.reduce((acc, s) => {
-    acc[s.name] = true;
-    return acc;
-  }, {} as Record<string, boolean>);
-  const excluded = species.filter(
-    (s) => s.is_legendary || s.is_mythical || s.hatch_counter > 48
-  ).map((s) => s.name);
-
-  return pokemons.filter((p) => !excluded.includes(p.name) && speciesNames[p.name]);
-}
-
 const isPokemonValid = async (pokemon: Pokemon) => {
   const species = await getSpeciesByName(pokemon.name);
   return !species.is_legendary && !species.is_mythical && species.hatch_counter <= 48;
